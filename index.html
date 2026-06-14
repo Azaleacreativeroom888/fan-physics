@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Notebook — 物理学習の記録</title>
+  <style>
+    :root {
+      --blue-deep:   #003F8A;
+      --blue-mid:    #1A5EB8;
+      --blue-light:  #3A7FD5;
+      --cream:       #F5F0E1;
+      --cream-dark:  #E4DACA;
+      --gold:        #C9960A;
+      --text-dark:   #1A1A2E;
+      --text-mid:    #2C3E6B;
+      --white:       #FFFFFF;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      color: var(--text-dark);
+      font-family: 'Helvetica Neue', 'Hiragino Sans', 'Meiryo', sans-serif;
+      line-height: 1.7;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: var(--blue-deep);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -60px;
+      width: 360px;
+      height: 220px;
+      background: var(--blue-mid);
+      transform: rotate(-12deg);
+      opacity: 0.6;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      right: 40px;
+      width: 200px;
+      height: 160px;
+      background: var(--blue-light);
+      transform: rotate(-12deg);
+      opacity: 0.35;
+    }
+
+    .header-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 52px 32px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .site-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      color: var(--gold);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .site-title {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+
+    .site-title span { color: var(--gold); }
+
+    .site-subtitle {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.72);
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .formula-strip {
+      background: var(--blue-mid);
+      padding: 10px 0;
+      border-top: 2px solid var(--gold);
+    }
+    .formula-scroll {
+      display: flex;
+      gap: 48px;
+      padding: 0 32px;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .formula-scroll span { flex-shrink: 0; }
+
+    /* ===== NAV ===== */
+    nav {
+      background: var(--blue-deep);
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+    }
+    nav a {
+      display: block;
+      padding: 14px 22px;
+      color: rgba(255,255,255,0.78);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+      position: relative;
+    }
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+    nav a:hover { color: var(--white); }
+    nav a:hover::after,
+    nav a.active::after { transform: scaleX(1); }
+    nav a.active { color: var(--white); }
+
+    /* ===== MAIN ===== */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 52px 32px 80px;
+    }
+
+    /* ===== HERO INTRO ===== */
+    .hero-intro {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      margin-bottom: 60px;
+      padding-bottom: 52px;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+
+    .hero-text h2 {
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      color: var(--blue-deep);
+      line-height: 1.35;
+      margin-bottom: 16px;
+    }
+    .hero-text p {
+      font-size: 0.95rem;
+      color: var(--text-mid);
+      line-height: 1.8;
+    }
+
+    .hero-diagram {
+      aspect-ratio: 1;
+      max-width: 280px;
+      margin: 0 auto;
+      background: var(--blue-deep);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-diagram::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 30%, var(--blue-mid) 0%, transparent 60%);
+    }
+    .diagram-svg {
+      position: relative;
+      z-index: 1;
+      width: 75%;
+    }
+
+    /* ===== SECTION TITLES ===== */
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .section-head h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--blue-deep);
+      letter-spacing: 0.02em;
+    }
+    .section-head .rule {
+      flex: 1;
+      height: 1px;
+      background: var(--cream-dark);
+    }
+    .section-head .tag {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* ===== TOPICS GRID ===== */
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 60px;
+    }
+    .topic-card {
+      background: var(--white);
+      border: 1px solid var(--cream-dark);
+      border-top: 3px solid var(--blue-mid);
+      padding: 24px 20px;
+      border-radius: 2px;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .topic-card:hover {
+      box-shadow: 0 6px 24px rgba(0,63,138,0.12);
+      transform: translateY(-2px);
+    }
+    .topic-num {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--blue-light);
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-family: 'Georgia', serif;
+    }
+    .topic-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--blue-deep);
+      margin-bottom: 8px;
+    }
+    .topic-card p {
+      font-size: 0.83rem;
+      color: var(--text-mid);
+      line-height: 1.65;
+    }
+
+    /* ===== LATEST POSTS ===== */
+    .posts-list {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 60px;
+    }
+    .post-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 20px;
+      align-items: baseline;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--cream-dark);
+      text-decoration: none;
+      color: inherit;
+    }
+    .post-row:hover .post-title { color: var(--blue-mid); }
+    .post-date {
+      font-size: 0.8rem;
+      color: var(--blue-light);
+      font-family: 'Georgia', serif;
+    }
+    .post-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-dark);
+      transition: color 0.15s;
+    }
+    .post-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 2px 7px;
+      border-radius: 2px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .badge-study { background: #D9EAFF; color: var(--blue-deep); }
+    .badge-col   { background: #FFF3CC; color: #7A5C00; }
+
+    /* ===== ABOUT SNIPPET ===== */
+    .about-box {
+      background: var(--blue-deep);
+      color: var(--white);
+      padding: 36px 40px;
+      border-radius: 2px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+    .about-box h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--gold);
+    }
+    .about-box p {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.78);
+      line-height: 1.75;
+    }
+    .about-link {
+      display: inline-block;
+      padding: 10px 24px;
+      background: var(--gold);
+      color: var(--blue-deep);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .about-link:hover { opacity: 0.85; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--blue-deep);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 28px 32px;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 680px) {
+      .hero-intro { grid-template-columns: 1fr; }
+      .hero-diagram { display: none; }
+      .topics-grid { grid-template-columns: 1fr 1fr; }
+      .about-box { grid-template-columns: 1fr; }
+      .nav-inner { overflow-x: auto; }
+    }
+    @media (max-width: 420px) {
+      .topics-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="site-label">Physics Study Log</div>
+    <h1 class="site-title">Quantum<span>Notebook</span></h1>
+    <p class="site-subtitle">ひとりの学習者が物理学をたどる記録</p>
+  </div>
+  <div class="formula-strip">
+    <div class="formula-scroll">
+      <span>E = mc²</span>
+      <span>F = ma</span>
+      <span>∇ · E = ρ/ε₀</span>
+      <span>ΔxΔp ≥ ℏ/2</span>
+      <span>S = k ln W</span>
+      <span>iℏ ∂ψ/∂t = Ĥψ</span>
+      <span>PV = nRT</span>
+      <span>c = λν</span>
+      <span>E = hν</span>
+      <span>F = -kx</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="active">HOME</a>
+    <a href="blog.html">STUDY LOG</a>
+    <a href="column.html">COLUMN</a>
+    <a href="about.html">ABOUT</a>
+  </div>
+</nav>
+
+<main>
+
+  <section class="hero-intro">
+    <div class="hero-text">
+      <h2>物理を、<br>ゼロから読み解く。</h2>
+      <p>
+        教科書と格闘する記録、気づいたこと、<br>
+        面白いと思った瞬間。<br>
+        このサイトはそういう、個人的な物理ノートです。<br>
+        ブルーバックスが好きで、物理が好きで、<br>
+        少しずつ学んでいます。
+      </p>
+    </div>
+    <div class="hero-diagram" aria-hidden="true">
+      <svg class="diagram-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="72" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <circle cx="100" cy="100" r="48" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+        <circle cx="100" cy="100" r="22" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+        <circle cx="100" cy="100" r="6" fill="#C9960A"/>
+        <circle cx="172" cy="100" r="4" fill="white" opacity="0.85"/>
+        <circle cx="124" cy="58" r="3.5" fill="white" opacity="0.7"/>
+        <circle cx="78" cy="122" r="3" fill="white" opacity="0.6"/>
+        <path d="M20 150 Q35 135 50 150 Q65 165 80 150 Q95 135 110 150 Q125 165 140 150 Q155 135 170 150" stroke="rgba(201,150,10,0.55)" stroke-width="2" fill="none"/>
+        <line x1="16" y1="180" x2="185" y2="180" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+        <line x1="16" y1="180" x2="16" y2="20" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+        <polyline points="180,175 185,180 180,185" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none"/>
+        <polyline points="11,25 16,20 21,25" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none"/>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="tag">Topics</div>
+      <h2>学習中のテーマ</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="topics-grid">
+      <div class="topic-card">
+        <div class="topic-num">01</div>
+        <h3>力学</h3>
+        <p>ニュートン力学から始まり、ラグランジアン・ハミルトニアンへの道。</p>
+      </div>
+      <div class="topic-card">
+        <div class="topic-num">02</div>
+        <h3>電磁気学</h3>
+        <p>マクスウェル方程式の美しさと、日常との繋がりを探す。</p>
+      </div>
+      <div class="topic-card">
+        <div class="topic-num">03</div>
+        <h3>熱力学</h3>
+        <p>エントロピーとは何か。温度と確率の不思議な関係。</p>
+      </div>
+      <div class="topic-card">
+        <div class="topic-num">04</div>
+        <h3>量子力学</h3>
+        <p>シュレーディンガー方程式と、波として存在するとはどういうことか。</p>
+      </div>
+      <div class="topic-card">
+        <div class="topic-num">05</div>
+        <h3>相対性理論</h3>
+        <p>光速不変の原理から時空の曲がりへ。ブルーバックスの定番。</p>
+      </div>
+      <div class="topic-card">
+        <div class="topic-num">06</div>
+        <h3>読書ノート</h3>
+        <p>ブルーバックスや物理関係の本を読んで気づいたことのメモ。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div class="tag">Latest</div>
+      <h2>最近の投稿</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="posts-list">
+      <a class="post-row" href="blog.html">
+        <span class="post-date">2025.06.10</span>
+        <span class="post-title">ラグランジアンの変分原理、ようやく少し見えてきた<span class="post-badge badge-study">Study</span></span>
+      </a>
+      <a class="post-row" href="column.html">
+        <span class="post-date">2025.06.07</span>
+        <span class="post-title">「エントロピーは増大する」を漫画で描いてみた<span class="post-badge badge-col">Column</span></span>
+      </a>
+      <a class="post-row" href="blog.html">
+        <span class="post-date">2025.06.04</span>
+        <span class="post-title">マクスウェル方程式を眺める日々<span class="post-badge badge-study">Study</span></span>
+      </a>
+      <a class="post-row" href="column.html">
+        <span class="post-date">2025.05.28</span>
+        <span class="post-title">波と粒子の二重性についての雑感<span class="post-badge badge-col">Column</span></span>
+      </a>
+      <a class="post-row" href="blog.html">
+        <span class="post-date">2025.05.21</span>
+        <span class="post-title">熱力学第二法則を初めてまともに読んだ<span class="post-badge badge-study">Study</span></span>
+      </a>
+    </div>
+  </section>
+
+  <div class="about-box">
+    <div>
+      <h3>About this site</h3>
+      <p>物理が好きな人間が、勉強の記録と思考のかけらを置く場所です。<br>専門家ではありません。ただ、面白いと思って読んでいます。</p>
+    </div>
+    <a href="about.html" class="about-link">→ About</a>
+  </div>
+
+</main>
+
+<footer>
+  <p>&copy; 2025 Quantum Notebook — Physics Study Log</p>
+</footer>
+
+</body>
+</html>
