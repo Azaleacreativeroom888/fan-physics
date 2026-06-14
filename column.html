@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Column — Quantum Notebook</title>
+  <style>
+    :root {
+      --blue-deep:   #003F8A;
+      --blue-mid:    #1A5EB8;
+      --blue-light:  #3A7FD5;
+      --cream:       #F5F0E1;
+      --cream-dark:  #E4DACA;
+      --gold:        #C9960A;
+      --text-dark:   #1A1A2E;
+      --text-mid:    #2C3E6B;
+      --white:       #FFFFFF;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      color: var(--text-dark);
+      font-family: 'Helvetica Neue', 'Hiragino Sans', 'Meiryo', sans-serif;
+      line-height: 1.7;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: var(--blue-deep);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -60px;
+      width: 360px; height: 220px;
+      background: var(--blue-mid);
+      transform: rotate(-12deg);
+      opacity: 0.6;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; right: 40px;
+      width: 200px; height: 160px;
+      background: var(--blue-light);
+      transform: rotate(-12deg);
+      opacity: 0.35;
+    }
+    .header-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 52px 32px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .site-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      color: var(--gold);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .site-title {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.1;
+    }
+    .site-title span { color: var(--gold); }
+    .site-subtitle {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.72);
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .formula-strip {
+      background: var(--blue-mid);
+      padding: 10px 0;
+      border-top: 2px solid var(--gold);
+    }
+    .formula-scroll {
+      display: flex;
+      gap: 48px;
+      padding: 0 32px;
+      font-family: 'Georgia', serif;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .formula-scroll span { flex-shrink: 0; }
+
+    /* ===== NAV ===== */
+    nav { background: var(--blue-deep); border-top: 1px solid rgba(255,255,255,0.1); }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+    }
+    nav a {
+      display: block;
+      padding: 14px 22px;
+      color: rgba(255,255,255,0.78);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      position: relative;
+      transition: color 0.2s;
+    }
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+    nav a:hover { color: var(--white); }
+    nav a:hover::after, nav a.active::after { transform: scaleX(1); }
+    nav a.active { color: var(--white); }
+
+    /* ===== MAIN ===== */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 52px 32px 80px;
+    }
+
+    .page-heading {
+      margin-bottom: 48px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+    .page-heading h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--blue-deep);
+      margin-bottom: 6px;
+    }
+    .page-heading p {
+      font-size: 0.85rem;
+      color: var(--text-mid);
+    }
+
+    /* ===== SECTION HEADS ===== */
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .section-head h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--blue-deep);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .section-head .rule {
+      flex: 1;
+      height: 1px;
+      background: var(--cream-dark);
+    }
+    .section-head .stag {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ===== COMICS / ILLUSTRATION GRID ===== */
+    .comics-section {
+      margin-bottom: 72px;
+    }
+
+    .comics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .comic-card {
+      background: var(--white);
+      border: 1px solid var(--cream-dark);
+      border-radius: 2px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .comic-card:hover {
+      box-shadow: 0 6px 24px rgba(0,63,138,0.13);
+      transform: translateY(-2px);
+    }
+
+    /* SVGで4コマ風プレースホルダー */
+    .comic-thumb {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: var(--blue-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .comic-thumb svg {
+      width: 80%;
+      opacity: 0.85;
+    }
+    .comic-thumb .thumb-label {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.45);
+      font-family: 'Georgia', serif;
+    }
+
+    .comic-info {
+      padding: 14px 16px 16px;
+    }
+    .comic-tag {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue-light);
+      margin-bottom: 5px;
+    }
+    .comic-info h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.45;
+      margin-bottom: 4px;
+    }
+    .comic-date {
+      font-size: 0.72rem;
+      color: var(--cream-dark);
+      font-family: 'Georgia', serif;
+      color: #9A8F7E;
+    }
+
+    /* ===== ARTICLES ===== */
+    .articles-section {
+      display: flex;
+      flex-direction: column;
+      gap: 52px;
+    }
+
+    .article {
+      background: var(--white);
+      border: 1px solid var(--cream-dark);
+      border-left: 4px solid var(--blue-mid);
+      padding: 36px 40px 36px 36px;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .article-badge {
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 2px;
+    }
+    .badge-essay   { background: #D9EAFF; color: var(--blue-deep); }
+    .badge-comics  { background: #FFF3CC; color: #7A5C00; }
+    .badge-illust  { background: #E0D9FF; color: #2A006F; }
+
+    .article-date {
+      font-size: 0.78rem;
+      font-family: 'Georgia', serif;
+      color: #9A8F7E;
+    }
+
+    .article h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--blue-deep);
+      line-height: 1.4;
+      margin-bottom: 18px;
+    }
+
+    .article-body {
+      font-size: 0.93rem;
+      color: var(--text-mid);
+      line-height: 1.9;
+    }
+    .article-body p + p {
+      margin-top: 14px;
+    }
+    .article-body .pullquote {
+      margin: 22px 0;
+      padding: 14px 20px;
+      border-left: 3px solid var(--gold);
+      background: var(--cream);
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      font-style: italic;
+      line-height: 1.75;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--blue-deep);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 28px 32px;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 680px) {
+      .comics-grid { grid-template-columns: 1fr 1fr; }
+      .article { padding: 24px 20px; }
+      .nav-inner { overflow-x: auto; }
+    }
+    @media (max-width: 400px) {
+      .comics-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="site-label">Physics Study Log</div>
+    <h1 class="site-title">Quantum<span>Notebook</span></h1>
+    <p class="site-subtitle">ひとりの学習者が物理学をたどる記録</p>
+  </div>
+  <div class="formula-strip">
+    <div class="formula-scroll">
+      <span>E = mc²</span><span>F = ma</span><span>∇ · E = ρ/ε₀</span>
+      <span>ΔxΔp ≥ ℏ/2</span><span>S = k ln W</span><span>iℏ ∂ψ/∂t = Ĥψ</span>
+      <span>PV = nRT</span><span>c = λν</span><span>E = hν</span><span>F = -kx</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html">HOME</a>
+    <a href="blog.html">STUDY LOG</a>
+    <a href="column.html" class="active">COLUMN</a>
+    <a href="about.html">ABOUT</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-heading">
+    <h2>Column</h2>
+    <p>漫画・イラスト・4コマと、物理についての短い文章。</p>
+  </div>
+
+  <!-- COMICS GRID -->
+  <section class="comics-section">
+    <div class="section-head">
+      <div class="stag">Comics &amp; Illust</div>
+      <h2>漫画・イラスト</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="comics-grid">
+
+      <div class="comic-card">
+        <div class="comic-thumb" style="background:#002D6B;">
+          <!-- 4コマ風プレースホルダーSVG -->
+          <svg viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="8" width="104" height="34" rx="2" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
+            <rect x="8" y="50" width="104" height="34" rx="2" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
+            <rect x="8" y="92" width="104" height="34" rx="2" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
+            <rect x="8" y="134" width="104" height="18" rx="2" stroke="rgba(201,150,10,0.5)" stroke-width="1.2"/>
+            <!-- キャラっぽい丸 -->
+            <circle cx="30" cy="25" r="8" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <circle cx="30" cy="67" r="8" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <circle cx="90" cy="109" r="8" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <!-- 吹き出しっぽい線 -->
+            <line x1="44" y1="25" x2="100" y2="25" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <line x1="44" y1="67" x2="100" y2="67" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <line x1="20" y1="109" x2="76" y2="109" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          </svg>
+          <span class="thumb-label">4コマ</span>
+        </div>
+        <div class="comic-info">
+          <div class="comic-tag">4コマ漫画</div>
+          <h3>エントロピーは増大する</h3>
+          <div class="comic-date">2025.06.07</div>
+        </div>
+      </div>
+
+      <div class="comic-card">
+        <div class="comic-thumb" style="background:#0A2A5E;">
+          <svg viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- 波のイラスト風 -->
+            <path d="M10 80 Q30 55 50 80 Q70 105 90 80 Q110 55 120 80" stroke="rgba(201,150,10,0.6)" stroke-width="2" fill="none"/>
+            <path d="M10 80 Q30 55 50 80 Q70 105 90 80 Q110 55 120 80" stroke="rgba(255,255,255,0.15)" stroke-width="8" fill="none"/>
+            <circle cx="60" cy="80" r="18" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-dasharray="4 3"/>
+            <circle cx="60" cy="80" r="6" fill="rgba(201,150,10,0.7)"/>
+            <line x1="10" y1="130" x2="110" y2="130" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <line x1="10" y1="130" x2="10" y2="30" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <text x="14" y="145" fill="rgba(255,255,255,0.3)" font-size="9" font-family="Georgia">x</text>
+            <text x="4" y="27" fill="rgba(255,255,255,0.3)" font-size="9" font-family="Georgia">ψ</text>
+          </svg>
+          <span class="thumb-label">イラスト</span>
+        </div>
+        <div class="comic-info">
+          <div class="comic-tag">イラスト</div>
+          <h3>波関数を絵で描いてみた</h3>
+          <div class="comic-date">2025.05.28</div>
+        </div>
+      </div>
+
+      <div class="comic-card">
+        <div class="comic-thumb" style="background:#001F4D;">
+          <svg viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="8" width="104" height="34" rx="2" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
+            <rect x="8" y="50" width="104" height="34" rx="2" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
+            <rect x="8" y="92" width="104" height="34" rx="2" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
+            <rect x="8" y="134" width="104" height="18" rx="2" stroke="rgba(201,150,10,0.5)" stroke-width="1.2"/>
+            <circle cx="90" cy="25" r="8" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <circle cx="30" cy="67" r="8" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <circle cx="90" cy="109" r="8" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            <line x1="20" y1="25" x2="76" y2="25" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <line x1="44" y1="67" x2="100" y2="67" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+            <line x1="20" y1="109" x2="76" y2="109" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          </svg>
+          <span class="thumb-label">4コマ</span>
+        </div>
+        <div class="comic-info">
+          <div class="comic-tag">4コマ漫画</div>
+          <h3>相対論的な朝</h3>
+          <div class="comic-date">2025.05.14</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ARTICLES -->
+  <section>
+    <div class="section-head">
+      <div class="stag">Essay</div>
+      <h2>コラム・小論</h2>
+      <div class="rule"></div>
+    </div>
+
+    <div class="articles-section">
+
+      <!-- 記事1 -->
+      <article class="article">
+        <div class="article-meta">
+          <span class="article-badge badge-essay">Essay</span>
+          <span class="article-date">2025.06.10</span>
+        </div>
+        <h3>「最小作用の原理」は、なぜこんなに美しいのか</h3>
+        <div class="article-body">
+          <p>
+            物理を勉強していると、ときどき「これは美しい」と感じる瞬間がある。最小作用の原理は、そのひとつだ。
+          </p>
+          <p>
+            F = ma というニュートンの方程式は、力を知っていれば運動を計算できる。それはそれで強力な道具だ。でも、ラグランジアン力学には少し違う問いがある。「粒子はなぜ、よりによってこの経路を通るのか？」という問いだ。
+          </p>
+          <div class="pullquote">
+            自然は、作用積分が最小（または停留）になるような経路を選ぶ。
+          </div>
+          <p>
+            これを最初に読んだとき、正直なんのことかわからなかった。でも図を描きながら少しずつ追っていくと、「すべての可能な経路のうちから、ある種の効率の良い経路が選ばれる」という見方ができるようになってきた。
+          </p>
+          <p>
+            量子力学のファインマン経路積分では、粒子はすべての経路を同時に通ると解釈される。そのすべてが干渉し合った結果として、古典的な経路が浮かび上がってくる。最小作用の原理は、量子力学の「古典極限」として現れる——そう読んだとき、ニュートン力学もラグランジアン力学も量子力学も、ひとつの視点から眺められるような気がした。物理の体系がひとつにつながる瞬間のような感覚があって、それがとても好きだ。
+          </p>
+        </div>
+      </article>
+
+      <!-- 記事2 -->
+      <article class="article">
+        <div class="article-meta">
+          <span class="article-badge badge-essay">Essay</span>
+          <span class="article-date">2025.05.21</span>
+        </div>
+        <h3>エントロピーを「乱雑さ」と呼ぶのは、少し違う気がする</h3>
+        <div class="article-body">
+          <p>
+            熱力学の教科書や入門書には、「エントロピーは乱雑さの尺度だ」という説明がよく出てくる。間違いではないと思う。でも、自分にはどうもしっくりこなかった。
+          </p>
+          <p>
+            ボルツマンの関係式 S = k ln W を見ると、エントロピー S は「場合の数 W の対数」だと書いてある。W は、あるマクロな状態を実現するミクロな配置の数のことだ。つまりエントロピーが高いということは、「そのマクロな状態をとりうるミクロな並べ方がたくさんある」ということだ。
+          </p>
+          <div class="pullquote">
+            乱雑なのではなく、「可能性が多い」状態——そう言い換えると少しすっきりする。
+          </div>
+          <p>
+            部屋が散らかっているのは、整頓された状態よりも「散らかり方のバリエーション」がはるかに多いから確率的に起きやすい。これは「乱雑さに引力がある」のではなく、「可能性の多い方向へ自然に流れる」という話だ。
+          </p>
+          <p>
+            熱力学第二法則が「エントロピーは増大する」と言うとき、それは宇宙が乱雑さを好んでいるということではなく、圧倒的に多くの場合の数がそちらにあるから、統計的にそうなるということだと思う。シンプルだけど、深い。
+          </p>
+        </div>
+      </article>
+
+      <!-- 記事3 -->
+      <article class="article">
+        <div class="article-meta">
+          <span class="article-badge badge-essay">Essay</span>
+          <span class="article-date">2025.05.14</span>
+        </div>
+        <h3>時空図を描いたら、相対論がわかった気がした</h3>
+        <div class="article-body">
+          <p>
+            特殊相対性理論の「同時刻の相対性」は、言葉だけで読むと何度読んでもピンとこなかった。「Aさんには同時に見える出来事が、Bさんには同時ではない」という説明は、感覚に反しすぎて頭が拒否する。
+          </p>
+          <p>
+            転機は時空図（ミンコフスキー図）を自分で手描きしてみたことだった。横軸に空間、縦軸に時間をとった図で、静止している観測者の世界線は縦に、光の経路は45度に描かれる。
+          </p>
+          <div class="pullquote">
+            動いている観測者の「同時刻」の面は、静止系からすると傾いて見える。
+          </div>
+          <p>
+            このことを図の上で確認したとき、「同時刻の相対性」が初めて「そうか、そういう幾何学になっているのか」と感じられた。相対論は直感に反するというより、私たちが普段使っている「時間と空間は別物」という直感が、特殊な極限でしか正しくないということなのだと思う。
+          </p>
+          <p>
+            物理は、図を描くとわかることが多い。それはたぶん、物理が本質的に「世界の形」を語っているからだと思う。
+          </p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2025 Quantum Notebook — Physics Study Log</p>
+</footer>
+
+</body>
+</html>
