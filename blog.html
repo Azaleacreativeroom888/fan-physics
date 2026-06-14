@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Log — Quantum Notebook</title>
+  <style>
+    :root {
+      --blue-deep:   #003F8A;
+      --blue-mid:    #1A5EB8;
+      --blue-light:  #3A7FD5;
+      --cream:       #F5F0E1;
+      --cream-dark:  #E4DACA;
+      --gold:        #C9960A;
+      --text-dark:   #1A1A2E;
+      --text-mid:    #2C3E6B;
+      --white:       #FFFFFF;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      color: var(--text-dark);
+      font-family: 'Helvetica Neue', 'Hiragino Sans', 'Meiryo', sans-serif;
+      line-height: 1.7;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: var(--blue-deep);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -60px;
+      width: 360px; height: 220px;
+      background: var(--blue-mid);
+      transform: rotate(-12deg);
+      opacity: 0.6;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; right: 40px;
+      width: 200px; height: 160px;
+      background: var(--blue-light);
+      transform: rotate(-12deg);
+      opacity: 0.35;
+    }
+    .header-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 52px 32px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .site-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      color: var(--gold);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .site-title {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.1;
+    }
+    .site-title span { color: var(--gold); }
+    .site-subtitle {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.72);
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .formula-strip {
+      background: var(--blue-mid);
+      padding: 10px 0;
+      border-top: 2px solid var(--gold);
+    }
+    .formula-scroll {
+      display: flex;
+      gap: 48px;
+      padding: 0 32px;
+      font-family: 'Georgia', serif;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .formula-scroll span { flex-shrink: 0; }
+
+    /* ===== NAV ===== */
+    nav { background: var(--blue-deep); border-top: 1px solid rgba(255,255,255,0.1); }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+    }
+    nav a {
+      display: block;
+      padding: 14px 22px;
+      color: rgba(255,255,255,0.78);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      position: relative;
+      transition: color 0.2s;
+    }
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+    nav a:hover { color: var(--white); }
+    nav a:hover::after, nav a.active::after { transform: scaleX(1); }
+    nav a.active { color: var(--white); }
+
+    /* ===== MAIN LAYOUT ===== */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 52px 32px 80px;
+    }
+
+    .page-heading {
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+    .page-heading h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--blue-deep);
+      margin-bottom: 6px;
+    }
+    .page-heading p {
+      font-size: 0.85rem;
+      color: var(--text-mid);
+    }
+
+    /* ===== TIMELINE ===== */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .month-group {
+      margin-bottom: 40px;
+    }
+
+    .month-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      font-family: 'Georgia', serif;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+
+    .entry {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 0;
+      position: relative;
+    }
+
+    /* 縦線 */
+    .entry:not(:last-child) .entry-line {
+      position: absolute;
+      left: 20px;
+      top: 36px;
+      bottom: 0;
+      width: 1px;
+      background: var(--cream-dark);
+    }
+
+    .entry-date-col {
+      padding-top: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .entry-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue-mid);
+      border: 2px solid var(--cream);
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .entry-day {
+      font-size: 0.68rem;
+      font-family: 'Georgia', serif;
+      color: var(--blue-light);
+      letter-spacing: 0.04em;
+      writing-mode: initial;
+    }
+
+    .entry-body {
+      padding: 12px 0 24px 16px;
+    }
+
+    .entry-tag {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 2px 7px;
+      border-radius: 2px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .tag-mechanics  { background: #D9EAFF; color: #003F8A; }
+    .tag-em         { background: #E0D9FF; color: #2A006F; }
+    .tag-thermo     { background: #FFE5D9; color: #7A2800; }
+    .tag-quantum    { background: #D9FFE8; color: #00522A; }
+    .tag-relativity { background: #FFF3CC; color: #7A5C00; }
+    .tag-book       { background: #F0F0F0; color: #444; }
+
+    .entry-text {
+      font-size: 0.93rem;
+      color: var(--text-dark);
+      line-height: 1.78;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--blue-deep);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 28px 32px;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+    }
+
+    @media (max-width: 480px) {
+      main { padding: 32px 20px 60px; }
+      .nav-inner { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="site-label">Physics Study Log</div>
+    <h1 class="site-title">Quantum<span>Notebook</span></h1>
+    <p class="site-subtitle">ひとりの学習者が物理学をたどる記録</p>
+  </div>
+  <div class="formula-strip">
+    <div class="formula-scroll">
+      <span>E = mc²</span><span>F = ma</span><span>∇ · E = ρ/ε₀</span>
+      <span>ΔxΔp ≥ ℏ/2</span><span>S = k ln W</span><span>iℏ ∂ψ/∂t = Ĥψ</span>
+      <span>PV = nRT</span><span>c = λν</span><span>E = hν</span><span>F = -kx</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html">HOME</a>
+    <a href="blog.html" class="active">STUDY LOG</a>
+    <a href="column.html">COLUMN</a>
+    <a href="about.html">ABOUT</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-heading">
+    <h2>Study Log</h2>
+    <p>勉強の進捗メモ。日付と気づきだけ。</p>
+  </div>
+
+  <div class="timeline">
+
+    <!-- 2025年6月 -->
+    <div class="month-group">
+      <div class="month-label">June 2025</div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">06/10</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-mechanics">力学</span>
+          <p class="entry-text">ラグランジアンの変分原理、ようやく少し見えてきた。「最小作用の原理」って言葉の意味がじわじわわかってきた気がする。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">06/07</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-book">読書</span>
+          <p class="entry-text">ブルーバックス「物理の風景」を読み返した。波動方程式のところで何度も止まる。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">06/04</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-em">電磁気</span>
+          <p class="entry-text">マクスウェル方程式を眺める日々。div B = 0 の意味（磁気単極子が存在しない）がやっとしっくりきた。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">06/01</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-mechanics">力学</span>
+          <p class="entry-text">ハミルトン形式に入った。正準変数と位相空間という概念がまだ霧の中。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2025年5月 -->
+    <div class="month-group">
+      <div class="month-label">May 2025</div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">05/28</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-quantum">量子力学</span>
+          <p class="entry-text">二重スリット実験のことを改めて考えた。「観測すると波が崩れる」って、いつ読んでも不思議すぎる。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">05/21</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-thermo">熱力学</span>
+          <p class="entry-text">熱力学第二法則を初めてまともに読んだ。エントロピーが「乱雑さ」というより「場合の数の対数」だという見方のほうがしっくりくる。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">05/14</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-relativity">相対論</span>
+          <p class="entry-text">特殊相対性理論の「同時刻の相対性」、図を描いてみたらようやく納得できた。時空図は偉大。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">05/08</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-thermo">熱力学</span>
+          <p class="entry-text">カルノーサイクルを自分で図を描きながら追った。効率が温度だけで決まるという事実、美しいと思う。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">05/02</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-book">読書</span>
+          <p class="entry-text">「熱力学の基礎」（清水明）を購入。分厚いけど評判が良いので挑戦してみる。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2025年4月 -->
+    <div class="month-group">
+      <div class="month-label">April 2025</div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">04/24</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-em">電磁気</span>
+          <p class="entry-text">クーロン力からガウスの法則へ。面積分という操作に慣れるまでが大変だった。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-line"></div>
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">04/17</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-mechanics">力学</span>
+          <p class="entry-text">ラグランジアン力学に入った。「なぜわざわざこんな書き方を？」という疑問がずっとあったけど、拘束条件の扱いが楽という点がわかってきた。</p>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-date-col">
+          <div class="entry-dot"></div>
+          <div class="entry-day">04/05</div>
+        </div>
+        <div class="entry-body">
+          <span class="entry-tag tag-mechanics">力学</span>
+          <p class="entry-text">このサイトを始めた。記録を残すことで少し継続できる気がしている。</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2025 Quantum Notebook — Physics Study Log</p>
+</footer>
+
+</body>
+</html>
